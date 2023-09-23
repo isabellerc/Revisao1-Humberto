@@ -82,12 +82,16 @@ namespace ExemploAPI.Controllers
 
 
         [HttpPost]
-
-        public IActionResult Post([FromBody] NovoJogoViewModel jogo)
+        public IActionResult Post([FromBody] JogoViewModel jogo)
         {
             if (!ModelState.IsValid)
             {
                 return ApiBadRequestResponse(ModelState, "Dados Inválidos");
+            }
+            if (!jogo.NumerosValidos())
+            {
+                ModelState.AddModelError("", "Os números não podem ser iguais.");
+                return BadRequest(ModelState);
             }
 
             List<JogoViewModel> jogos = LerJogosDoArquivo();
@@ -107,6 +111,8 @@ namespace ExemploAPI.Controllers
                 quintoNro = jogo.quintoNro,
                 sextoNro = jogo.sextoNro,
                 dataJogo = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")
+
+
             };
 
 
@@ -114,53 +120,10 @@ namespace ExemploAPI.Controllers
             EscreverJogosNoArquivo(jogos);
 
             return ApiResponse(novoJogo, "Jogo criado com sucesso");
-            //return CreatedAtAction(nameof(Get), new { codigo = novoJogo.Codigo }, novoJogo);
+            
         }
 
-        [HttpPut("{codigo}")]
-        public IActionResult Put(int codigo, [FromBody] EditaJogoViewModel jogo)
-        {
-            if (jogo == null)
-                return BadRequest();
-
-            List<JogoViewModel> jogos = LerJogosDoArquivo();
-            int index = jogos.FindIndex(p => p.Codigo == codigo);
-            if (index == -1)
-                return NotFound();
-
-            JogoViewModel jogoEditado = new JogoViewModel()
-            {
-                Codigo = codigo,
-                Nome = jogo.Nome,
-                Idade = jogo.Idade,
-                Cpf = jogo.Cpf,
-                primeiroNro = jogo.primeiroNro,
-                segundoNro = jogo.segundoNro,
-                terceiroNro = jogo.terceiroNro,
-                quartoNro = jogo.quartoNro,
-                quintoNro = jogo.quintoNro,
-                sextoNro = jogo.sextoNro,
-            };
-
-            jogos[index] = jogoEditado;
-            EscreverJogosNoArquivo(jogos);
-
-            return NoContent();
-        }
-
-        [HttpDelete("{codigo}")]
-        public IActionResult Delete(int codigo)
-        {
-            List<JogoViewModel> jogos = LerJogosDoArquivo();
-            JogoViewModel jogo = jogos.Find(p => p.Codigo == codigo);
-            if (jogo == null)
-                return NotFound();
-
-            jogos.Remove(jogo);
-            EscreverJogosNoArquivo(jogos);
-
-            return NoContent();
-        }
+        
         #endregion
     }
 }
