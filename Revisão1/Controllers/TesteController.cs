@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Revisão1.Controllers;
-using Revisão1.Request;
+using Revisão1.Models.Request;
 
 namespace ExemploAPI.Controllers //acho que esse namespace está errado (verificar nas outras classes tambem)
 {
@@ -35,7 +35,7 @@ namespace ExemploAPI.Controllers //acho que esse namespace está errado (verific
             //{
             //    return BadRequest("Idade inválida");
             //}
-            return Ok("Aluno criado com sucesso");
+            return Ok("Jogo criado com sucesso");
         }
     }
 }

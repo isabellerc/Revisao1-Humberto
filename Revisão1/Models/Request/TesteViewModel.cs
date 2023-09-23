@@ -1,14 +1,13 @@
 ﻿using Revisão1.Models.CustomValidations.ExemploAPI.Models.CustonValidations;
 
-namespace Revisão1.Request
+namespace Revisão1.Models.Request
 {
-    public class JogoViewModel
+    public class TesteViewModel
     {
         public string Nome { get; set; }
-
         public int Idade { get; set; }
 
-        [CpfValidationAttribute]
+        [CpfValidation(ErrorMessage = "CPF inválido.")]
         public string Cpf { get; set; }
     }
 }

@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Revisão1.Controllers;
-using Revisão1.Request;
+using Revisão1.Models.CustomValidations.ExemploAPI.Models.CustonValidations;
+using Revisão1.Models.Request;
 
 namespace ExemploAPI.Controllers
 {
@@ -9,31 +10,39 @@ namespace ExemploAPI.Controllers
     [Route("api/[controller]")]
     public class JogoController : PrincipalController
     {
-        private readonly string _produtoCaminhoArquivo;
+        private readonly string _RegistroJogoCaminhoArquivo;
 
         public JogoController()
         {
-            _produtoCaminhoArquivo = Path.Combine(Directory.GetCurrentDirectory(), "Data", "produto.json");
+            _RegistroJogoCaminhoArquivo = Path.Combine(Directory.GetCurrentDirectory(), "Data", "JogosMega.json");
         }
 
         #region Métodos arquivo
-        private List<JogoViewModel> LerProdutosDoArquivo()
+        private List<JogoViewModel> LerJogosDoArquivo()
         {
-            if (!System.IO.File.Exists(_produtoCaminhoArquivo))
+            if (!System.IO.File.Exists(_RegistroJogoCaminhoArquivo))
             {
                 return new List<JogoViewModel>();
             }
 
-            string json = System.IO.File.ReadAllText(_produtoCaminhoArquivo);
-            return JsonConvert.DeserializeObject<List<JogoViewModel>>(json);
+            string json = System.IO.File.ReadAllText(_RegistroJogoCaminhoArquivo);
+
+            //json = "[" + json + "]";
+
+            // Em seguida, você pode desserializar o JSON em uma lista de objetos JogoViewModel:
+            List<JogoViewModel> listaDeJogos = JsonConvert.DeserializeObject<List<JogoViewModel>>(json);
+
+            // Agora, você pode retornar a listaDeJogos, se necessário:
+            return listaDeJogos;
+
         }
 
         private int ObterProximoCodigoDisponivel()
         {
-            List<JogoViewModel> produtos = LerProdutosDoArquivo();
-            if (produtos.Any())
+            List<JogoViewModel> jogos = LerJogosDoArquivo();
+            if (jogos.Any())
             {
-                return produtos.Max(p => p.Codigo) + 1;
+                return jogos.Max(p => p.Codigo) + 1;
             }
             else
             {
@@ -41,10 +50,10 @@ namespace ExemploAPI.Controllers
             }
         }
 
-        private void EscreverProdutosNoArquivo(List<JogoViewModel> produtos)
+        private void EscreverJogosNoArquivo(List<JogoViewModel> jogos)
         {
-            string json = JsonConvert.SerializeObject(produtos);
-            System.IO.File.WriteAllText(_produtoCaminhoArquivo, json);
+            string json = JsonConvert.SerializeObject(jogos);
+            System.IO.File.WriteAllText(_RegistroJogoCaminhoArquivo, json);
         }
         #endregion
 
@@ -53,22 +62,24 @@ namespace ExemploAPI.Controllers
         [HttpGet]
         public IActionResult Get()
         {
-            List<JogoViewModel> listaTodosProdutos = LerProdutosDoArquivo();
-            return Ok(listaTodosProdutos);
+            List<JogoViewModel> jogos = LerJogosDoArquivo();
+            return Ok(jogos);
         }
 
         [HttpGet("{codigo}")]
         public IActionResult Get(int codigo)
         {
-            List<JogoViewModel> produtos = LerProdutosDoArquivo();
-            JogoViewModel produto = produtos.Find(p => p.Codigo == codigo);
-            if (produto == null)
+            List<JogoViewModel> jogos = LerJogosDoArquivo();
+            JogoViewModel jogo = jogos.Find(p => p.Codigo == codigo);
+            if (jogo == null)
             {
                 return NotFound();
             }
 
-            return Ok(produto);
+            return Ok(jogo);
         }
+
+
 
         [HttpPost]
 
@@ -79,45 +90,60 @@ namespace ExemploAPI.Controllers
                 return ApiBadRequestResponse(ModelState, "Dados Inválidos");
             }
 
-            List<JogoViewModel> produtos = LerProdutosDoArquivo();
+            List<JogoViewModel> jogos = LerJogosDoArquivo();
             int proximoCodigo = ObterProximoCodigoDisponivel();
 
-            JogoViewModel novoProduto = new JogoViewModel()
+            JogoViewModel novoJogo = new JogoViewModel()
+            
             {
                 Codigo = proximoCodigo,
-                Descricao = jogo.Descricao,
-                Preco = jogo.Preco,
-                Estoque = jogo.Estoque,
-                Ativo = jogo.Ativo
+                Nome = jogo.Nome,
+                Idade = jogo.Idade,
+                Cpf = jogo.Cpf,
+                primeiroNro = jogo.primeiroNro,
+                segundoNro = jogo.segundoNro,
+                terceiroNro = jogo.terceiroNro,
+                quartoNro = jogo.quartoNro,
+                quintoNro = jogo.quintoNro,
+                sextoNro = jogo.sextoNro,
+                dataJogo = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")
             };
 
-            produtos.Add(novoProduto);
-            EscreverProdutosNoArquivo(produtos);
 
-            return CreatedAtAction(nameof(Get), new { codigo = novoProduto.Codigo }, novoProduto);
+            jogos.Add(novoJogo);
+            EscreverJogosNoArquivo(jogos);
+
+            return ApiResponse(novoJogo, "Jogo criado com sucesso");
+            //return CreatedAtAction(nameof(Get), new { codigo = novoJogo.Codigo }, novoJogo);
         }
 
         [HttpPut("{codigo}")]
-        public IActionResult Put(int codigo, [FromBody] EditaJogoViewModel produto)
+        public IActionResult Put(int codigo, [FromBody] EditaJogoViewModel jogo)
         {
-            if (produto == null)
+            if (jogo == null)
                 return BadRequest();
 
-            List<JogoViewModel> produtos = LerProdutosDoArquivo();
-            int index = produtos.FindIndex(p => p.Codigo == codigo);
+            List<JogoViewModel> jogos = LerJogosDoArquivo();
+            int index = jogos.FindIndex(p => p.Codigo == codigo);
             if (index == -1)
                 return NotFound();
 
-            JogoViewModel alunoEditado = new ViewModel()
+            JogoViewModel jogoEditado = new JogoViewModel()
             {
                 Codigo = codigo,
-                Estoque = produto.Estoque,
-                Descricao = produto.Descricao,
-                Preco = produto.Preco
+                Nome = jogo.Nome,
+                Idade = jogo.Idade,
+                Cpf = jogo.Cpf,
+                primeiroNro = jogo.primeiroNro,
+                segundoNro = jogo.segundoNro,
+                terceiroNro = jogo.terceiroNro,
+                quartoNro = jogo.quartoNro,
+                quintoNro = jogo.quintoNro,
+                sextoNro = jogo.sextoNro,
             };
 
-            produtos[index] = produtoEditado;
-            EscreverProdutosNoArquivo(produtos);
+            jogos[index] = jogoEditado;
+            EscreverJogosNoArquivo(jogos);
 
             return NoContent();
         }
@@ -125,13 +151,13 @@ namespace ExemploAPI.Controllers
         [HttpDelete("{codigo}")]
         public IActionResult Delete(int codigo)
         {
-            List<JogoViewModel> produtos = LerProdutosDoArquivo();
-            JogoViewModel produto = produtos.Find(p => p.Codigo == codigo);
-            if (produto == null)
+            List<JogoViewModel> jogos = LerJogosDoArquivo();
+            JogoViewModel jogo = jogos.Find(p => p.Codigo == codigo);
+            if (jogo == null)
                 return NotFound();
 
-            produtos.Remove(produto);
-            EscreverProdutosNoArquivo(produtos);
+            jogos.Remove(jogo);
+            EscreverJogosNoArquivo(jogos);
 
             return NoContent();
         }
